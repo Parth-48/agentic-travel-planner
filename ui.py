@@ -392,7 +392,7 @@ if submit_btn:
 
         try:
             res = requests.post(
-                "http://localhost:8000/api/v1/plan-trip", json=payload, timeout=45
+                "https://agentic-travel-planner-backend.onrender.com", json=payload, timeout=45
             )
 
             if res.status_code == 200:
