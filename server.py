@@ -3,10 +3,11 @@ import sys
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.graph.workflow import travel_app
 
-# Enforce Windows Proactor Loop policy for Playwright subprocesses
+# Enforce Windows Proactor Loop policy for Playwright subprocesses locally
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
@@ -18,6 +19,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic Travel Planner API", version="1.0", lifespan=lifespan)
 
+# Enable CORS for Streamlit Cloud frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class PlanTripRequest(BaseModel):
     origin: str
     destination: str
@@ -25,6 +35,11 @@ class PlanTripRequest(BaseModel):
     end_date: str
     budget_inr: float
     num_passengers: int = 1
+
+@app.get("/")
+async def root():
+    """Health check endpoint for Render monitoring and verification."""
+    return {"status": "HEALTHY", "message": "Agentic Travel Planner Backend API is live!"}
 
 @app.post("/api/v1/plan-trip")
 async def plan_trip_endpoint(req: PlanTripRequest):
